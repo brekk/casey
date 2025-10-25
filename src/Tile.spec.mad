@@ -1,18 +1,14 @@
-import type { Cardinal, Neighbors, Tile, TileMap } from "@/Tile"
-
 import { Just, Nothing } from "Maybe"
 import String from "String"
 
 import { caseN2, report } from "Study"
 
+import { ENTITY_CORNER } from "@/Constants"
 import { renderRooms } from "@/Render"
 import {
   Cardinal,
   Neighbors,
   Tile,
-  TileDoor,
-  TileFloor,
-  TileHazard,
   TileVoid,
   TileWall,
   atIndex,
@@ -25,7 +21,7 @@ import {
 
 
 
-FIXTURE_TILE_MAP = makeTileMap(TileVoid, 6, 6)
+FIXTURE_TILE_MAP = makeTileMap(TileVoid, 12, 12)
 
 modifyTestMap = where {
   Tile(_, x, y) =>
@@ -42,12 +38,18 @@ report(
   [
     #[
       FIXTURE_TILE_MAP,
-      `012345
-1#####
-2#####
-3#####
-4#####
-5#####`,
+      `⏺123456789▼1⏺
+1⋆⋆⋆⋆⋆⋆⋆⋆⋆⋆⋆1
+2⋆⋆⋆⋆⋆⋆⋆⋆⋆⋆⋆2
+3⋆⋆⋆⋆⋆⋆⋆⋆⋆⋆⋆3
+4⋆⋆⋆⋆⋆⋆⋆⋆⋆⋆⋆4
+5⋆⋆⋆⋆⋆⋆⋆⋆⋆⋆⋆5
+6123456789▼16
+7⋆⋆⋆⋆⋆⋆⋆⋆⋆⋆⋆7
+8⋆⋆⋆⋆⋆⋆⋆⋆⋆⋆⋆8
+9⋆⋆⋆⋆⋆⋆⋆⋆⋆⋆⋆9
+▶⋆⋆⋆⋆⋆⋆⋆⋆⋆⋆⋆◀
+1⋆⋆⋆⋆⋆⋆⋆⋆⋆⋆⋆1`,
     ],
   ],
 )
@@ -73,16 +75,16 @@ report(
   "getNeighbors",
   [
     #[
-      #[5, 5],
+      #[11, 5],
       Neighbors(
         Nothing,
-        Just(Tile(TileVoid, 5, 4)),
+        Just(Tile(TileVoid, 11, 4)),
         Nothing,
-        Just(Tile(TileVoid, 4, 4)),
+        Just(Tile(TileVoid, 10, 4)),
+        Just(Tile(TileWall, 11, 6)),
         Nothing,
-        Nothing,
-        Nothing,
-        Just(Tile(TileVoid, 4, 5)),
+        Just(Tile(TileWall, 10, 6)),
+        Just(Tile(TileVoid, 10, 5)),
       ),
     ],
   ],
@@ -96,7 +98,17 @@ report(
     )(FIXTURE_TILE_MAP),
   ),
   "getCardinalNeighbors",
-  [#[#[5, 5], Cardinal(Nothing, Just(Tile(TileVoid, 5, 4)), Nothing, Just(Tile(TileVoid, 4, 5)))]],
+  [
+    #[
+      #[11, 5],
+      Cardinal(
+        Nothing,
+        Just(Tile(TileVoid, 11, 4)),
+        Just(Tile(TileWall, 11, 6)),
+        Just(Tile(TileVoid, 10, 5)),
+      ),
+    ],
+  ],
 )
 
 report(
@@ -107,5 +119,10 @@ report(
     )(FIXTURE_TILE_MAP),
   ),
   "getPossibleCardinalPaths",
-  [#[#[5, 5], [Just(Tile(TileVoid, 5, 4)), Just(Tile(TileVoid, 4, 5))]]],
+  [
+    #[
+      #[11, 5],
+      [Just(Tile(TileVoid, 11, 4)), Just(Tile(TileWall, 11, 6)), Just(Tile(TileVoid, 10, 5))],
+    ],
+  ],
 )

@@ -3,10 +3,8 @@ import type { Maybe } from "Maybe"
 import type { Character, Inventory, Stuff } from "@/Types"
 
 import { lt } from "Compare"
-import Fn from "Function"
-import IO from "IO"
 import List from "List"
-import { Just, Nothing, fromMaybe } from "Maybe"
+import { Just, Nothing } from "Maybe"
 import Set from "Set"
 
 import Object from "@/Object"

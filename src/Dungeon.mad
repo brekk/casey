@@ -184,7 +184,7 @@ export createDungeon = (seed, _width, _height) => {
   _areas = makeRooms(400, width, height, 3, seed)
   IO.trace("ROOMS", _areas)
   _tiles = makeTileMap(TileWall, width, height)
-  getTile = atIndex(_tiles)
+  // getTile = atIndex(_tiles)
   inRoom = anyContainsPoint(_areas)
   tiles = pipe(
     walkTileMap(where { Tile(_, tx, ty) => Tile(inRoom(tx, ty) ? TileFloor : TileWall, tx, ty) }),
