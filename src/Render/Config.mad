@@ -92,7 +92,7 @@ defaultRenderEndLineCharacter = (charMap, fn, i) => Fn.ifElse(
   isZero,
   Fn.always(charMap.CORNER_BL),
   _nonZero(charMap, fn),
-)
+)(i)
 
 DEFAULT_RENDER_CONFIG :: RenderConfig
 export DEFAULT_RENDER_CONFIG = {
@@ -100,7 +100,7 @@ export DEFAULT_RENDER_CONFIG = {
   characterMap: DEFAULT_CHARMAP,
   boundary: defaultBoundary,
   endBoundary: defaultEndBoundary,
+  renderEndLineCharacter: defaultRenderEndLineCharacter,
 }
-// renderEndLineCharacter: defaultRenderEndLineCharacter,
 
 export render = renderWithConfig(DEFAULT_RENDER_CONFIG)

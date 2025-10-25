@@ -38,6 +38,7 @@ export alias RenderConfig = {
   characterMap :: CharacterMap,
   colorize :: Boolean,
   endBoundary :: CharacterMap -> List String -> List String,
+  renderEndLineCharacter :: CharacterMap -> (String -> String) -> Integer -> String,
 }
 
 
@@ -80,22 +81,12 @@ export renderTileWithConfig = (config, stageWidth, stageHeight, tile) => {
 renderFinalLineWithConfig :: RenderConfig -> Integer -> String -> String
 renderFinalLineWithConfig = (config, h, r) => {
   enred = condColor(config.colorize, Terminal.text.red)
-  nonZero = pipe(
-    trailingDigit,
-    Fn.ifElse(
-      isZero,
-      Fn.always(config.characterMap.TICK_UP),
-      pipe(
-        show,
-        enred,
-      ),
-    ),
-  )
+
   return r
     ++ "\n"
     ++ pipe(
       List.range(0),
-      map(Fn.ifElse(isZero, Fn.always(config.characterMap.CORNER_BL), nonZero)),
+      map(config.renderEndLineCharacter(config.characterMap, enred)),
       unwords,
     )(h)
     ++ config.characterMap.CORNER_BR
