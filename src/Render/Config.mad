@@ -1,0 +1,106 @@
+import type { CharacterMap, RenderConfig } from "@/Render"
+
+import Fn from "Function"
+import List from "List"
+
+import { trailingDigit } from "@/Math"
+import { renderWithConfig } from "@/Render"
+import { stripColor } from "@/String"
+import {
+  ENTITY_BOUNDARY,
+  ENTITY_CORNER_BL,
+  ENTITY_CORNER_BR,
+  ENTITY_CORNER_TL,
+  ENTITY_CORNER_TR,
+  ENTITY_ROOM,
+  ENTITY_SPACE,
+  ENTITY_SPACE_BOLD,
+  ENTITY_TICK_DOWN,
+  ENTITY_TICK_LEFT,
+  ENTITY_TICK_RIGHT,
+  ENTITY_TICK_UP,
+} from "@/constants"
+
+
+
+isZero = Fn.equals(0)
+
+defaultBoundary = (fun, tick, i) => pipe(
+  trailingDigit,
+  Fn.ifElse(
+    isZero,
+    Fn.always(tick),
+    pipe(
+      show,
+      fun,
+    ),
+  ),
+)(i)
+
+DEFAULT_CHARMAP :: CharacterMap
+export DEFAULT_CHARMAP = {
+  BOUNDARY: ENTITY_BOUNDARY,
+  CORNER_BL: ENTITY_CORNER_BL,
+  CORNER_BR: ENTITY_CORNER_BR,
+  CORNER_TL: ENTITY_CORNER_TL,
+  CORNER_TR: ENTITY_CORNER_TR,
+  ROOM: ENTITY_ROOM,
+  SPACE: ENTITY_SPACE,
+  SPACE_GRID: ENTITY_SPACE_BOLD,
+  TICK_DOWN: ENTITY_TICK_DOWN,
+  TICK_LEFT: ENTITY_TICK_LEFT,
+  TICK_RIGHT: ENTITY_TICK_RIGHT,
+  TICK_UP: ENTITY_TICK_UP,
+}
+
+defaultEndBoundarySwap :: CharacterMap -> String -> String
+defaultEndBoundarySwap = (charMap, char) => {
+  d = stripColor(char)
+  return d == charMap.TICK_LEFT
+    ? charMap.TICK_LEFT
+    : d == charMap.CORNER_TL ? charMap.CORNER_TR : char
+}
+
+defaultEndBoundary :: CharacterMap -> List String -> List String
+defaultEndBoundary = (charMap, raw) => where(raw) {
+  [] =>
+    []
+
+  [x] =>
+    [x]
+
+  [x, ...y] =>
+    pipe(
+      List.concat([x]),
+      List.append(defaultEndBoundarySwap(charMap, x)),
+    )(y)
+}
+
+_nonZero = (charMap, fn, i) => pipe(
+  trailingDigit,
+  Fn.ifElse(
+    isZero,
+    Fn.always(charMap.TICK_UP),
+    pipe(
+      show,
+      fn,
+    ),
+  ),
+)(i)
+
+defaultRenderEndLineCharacter = (charMap, fn, i) => Fn.ifElse(
+  isZero,
+  Fn.always(charMap.CORNER_BL),
+  _nonZero(charMap, fn),
+)
+
+DEFAULT_RENDER_CONFIG :: RenderConfig
+export DEFAULT_RENDER_CONFIG = {
+  colorize: true,
+  characterMap: DEFAULT_CHARMAP,
+  boundary: defaultBoundary,
+  endBoundary: defaultEndBoundary,
+}
+// renderEndLineCharacter: defaultRenderEndLineCharacter,
+
+export render = renderWithConfig(DEFAULT_RENDER_CONFIG)

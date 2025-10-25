@@ -11,8 +11,7 @@ import { trailingDigit } from "@/Math"
 // import Maze from "@/Maze"
 import {
   render,
-  renderWithColor,
-} from "@/Render"
+} from "@/Render/Config"
 
 
 
@@ -22,7 +21,7 @@ main = () => {
     Date.getTimestamp,
     Random.generate,
     Dungeon.createDungeon($, 40, 80),
-    renderWithColor(true),
+    render,
     IO.put,
   )(Date.now())
 }

@@ -34,8 +34,7 @@ import {
 
 
 
-export alias Config = {
-  colorize :: Boolean,
+export alias DungeonConfig = {
   edgeDistance :: Integer,
   pad :: Integer,
   rectangularity :: Random -> Integer -> Integer,
@@ -45,7 +44,7 @@ export alias Config = {
 }
 
 // Dungeon(seed, width, height, tiles, areas, config)
-export type Dungeon = Dungeon(Random, Integer, Integer, TileMap, List Area, Config)
+export type Dungeon = Dungeon(Random, Integer, Integer, TileMap, List Area, DungeonConfig)
 
 NORTH :: Vector Integer
 export NORTH = Vector(0, 1)
@@ -80,7 +79,7 @@ export calcRoomSize = (size, rectangularity, maximum, edgeDistance, seed) => Flo
     + 1,
 )
 
-makeRandomRoom :: Config -> Integer -> Integer -> Integer -> Random -> Area
+makeRandomRoom :: DungeonConfig -> Integer -> Integer -> Integer -> Random -> Area
 export makeRandomRoom = (config, stageWidth, stageHeight, pad, seed) => {
   size = config.size(seed, pad)
   rect = config.rectangularity(seed, size)
@@ -94,13 +93,13 @@ export makeRandomRoom = (config, stageWidth, stageHeight, pad, seed) => {
   return area
 }
 
-makeRooms :: Config -> Integer -> Integer -> Integer -> Integer -> Random -> List Area
+makeRooms :: DungeonConfig -> Integer -> Integer -> Integer -> Integer -> Random -> List Area
 export makeRooms = (config, total, stageWidth, stageHeight, pad, seed) => pipe(
   List.repeatWith(() => makeRandomRoom(config, stageWidth, stageHeight, pad, seed)),
   List.reduce((agg, x) => !anyIntersectsWithPadding(1, agg, x) ? [...agg, x] : agg, []),
 )(total)
 
-stageDimension :: Config -> Integer -> Integer
+stageDimension :: DungeonConfig -> Integer -> Integer
 export stageDimension = (conf, x) => pipe(
   Math.max($, conf.stageLimit),
   makeOdd,
@@ -189,7 +188,7 @@ export mapSize = (tilemap) => pipe(
 )(tilemap)
 
 
-createDungeonWithConfig :: Config -> Random -> Integer -> Integer -> Dungeon
+createDungeonWithConfig :: DungeonConfig -> Random -> Integer -> Integer -> Dungeon
 export createDungeonWithConfig = (config, seed, _width, _height) => {
   width = stageDimension(config, _width)
   height = stageDimension(config, _height)
@@ -220,7 +219,7 @@ defaultRectangularity = (seed, size) => R.integer(
   )
     * 2
 
-DEFAULT_CONFIG :: Config
+DEFAULT_CONFIG :: DungeonConfig
 export DEFAULT_CONFIG = {
   pad: 4,
   edgeDistance: 4,
@@ -228,7 +227,6 @@ export DEFAULT_CONFIG = {
   rectangularity: defaultRectangularity,
   size: defaultSize,
   rooms: R.integer(100, 5000),
-  colorize: true,
 }
 
 export createDungeon = createDungeonWithConfig(DEFAULT_CONFIG)

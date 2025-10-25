@@ -12,98 +12,79 @@ import Terminal from "Terminal"
 import { Area, anyContainsPoint, getBoundingBox, isBoundary } from "@/Area"
 import { Dungeon } from "@/Dungeon"
 import { trailingDigit } from "@/Math"
-import { stripColor } from "@/String"
 import { Tile, TileFloor, TileWall, walkTileMap } from "@/Tile"
-import {
-  ENTITY_BOUNDARY,
-  ENTITY_CORNER_BL,
-  ENTITY_CORNER_BR,
-  ENTITY_CORNER_TL,
-  ENTITY_CORNER_TR,
-  ENTITY_ROOM,
-  ENTITY_SPACE,
-  ENTITY_SPACE_BOLD,
-  ENTITY_TICK_DOWN,
-  ENTITY_TICK_LEFT,
-  ENTITY_TICK_RIGHT,
-  ENTITY_TICK_UP,
-} from "@/constants"
 
+
+
+export alias CharacterMap = {
+  BOUNDARY :: String,
+  CORNER_BL :: String,
+  CORNER_BR :: String,
+  CORNER_TL :: String,
+  CORNER_TR :: String,
+  ROOM :: String,
+  SPACE :: String,
+  SPACE_GRID :: String,
+  TICK_DOWN :: String,
+  TICK_LEFT :: String,
+  TICK_RIGHT :: String,
+  TICK_UP :: String,
+}
+
+
+
+export alias RenderConfig = {
+  boundary :: (String -> String) -> String -> Integer -> String,
+  characterMap :: CharacterMap,
+  colorize :: Boolean,
+  endBoundary :: CharacterMap -> List String -> List String,
+}
 
 
 isZero = Fn.equals(0)
 unwords = String.join("")
 unlines = String.join("\n")
-endBoundarySwap = (c) => {
-  d = stripColor(c)
-  return d == ENTITY_TICK_RIGHT ? ENTITY_TICK_LEFT : d == ENTITY_CORNER_TL ? ENTITY_CORNER_TR : c
-}
 
-addEndBoundaries = where {
-  [] =>
-    []
 
-  [x] =>
-    [x]
-
-  [x, ...y] =>
-    pipe(
-      List.concat([x]),
-      List.append(endBoundarySwap(x)),
-    )(y)
-}
 
 export condColor = (yes, fn, x) => yes ? fn(x) : x
 
-renderBoundaryWithColor :: Boolean -> String -> (String -> String) -> Integer -> String
-export renderBoundaryWithColor = (colorize, tick, fn, i) => {
-  fun = condColor(colorize, fn)
-  return Fn.ifElse(
-    isZero,
-    Fn.always(ENTITY_CORNER_TL),
-    pipe(
-      trailingDigit,
-      Fn.ifElse(
-        isZero,
-        Fn.always(tick),
-        pipe(
-          show,
-          fun,
-        ),
-      ),
-    ),
-    i,
-  )
+renderBoundaryWithConfig :: RenderConfig -> String -> (String -> String) -> Integer -> String
+export renderBoundaryWithConfig = (config, tick, fn, i) => {
+  fun = condColor(config.colorize, fn)
+  return Fn.ifElse(isZero, Fn.always(config.characterMap.CORNER_TL), config.boundary(fun, tick), i)
 }
 
 
-renderTileWithColor :: Boolean -> Integer -> Integer -> Tile -> String
-export renderTileWithColor = (colorize, stageWidth, stageHeight, tile) => {
-  bound = renderBoundaryWithColor(colorize)
+renderTileWithConfig :: RenderConfig -> Integer -> Integer -> Tile -> String
+export renderTileWithConfig = (config, stageWidth, stageHeight, tile) => {
+  bound = renderBoundaryWithConfig(config)
   return where(tile) {
     Tile(tk, tx, ty) =>
       if (tk == TileFloor) {
-        ENTITY_ROOM
+        config.characterMap.ROOM
       } else if (
         tk == TileWall && isBoundary(getBoundingBox(Area(0, 0, stageWidth, stageHeight)), tx, ty)
       ) {
         ty == 0
-          ? bound(ENTITY_TICK_RIGHT, Terminal.text.green, tx)
-          : bound(ENTITY_TICK_DOWN, Terminal.text.yellow, ty)
+          ? bound(config.characterMap.TICK_RIGHT, Terminal.text.green, tx)
+          : bound(config.characterMap.TICK_DOWN, Terminal.text.yellow, ty)
       } else {
-        trailingDigit(ty) == 0 || trailingDigit(tx) == 0 ? ENTITY_SPACE_BOLD : ENTITY_SPACE
+        trailingDigit(ty) == 0 || trailingDigit(tx) == 0
+          ? config.characterMap.SPACE_GRID
+          : config.characterMap.SPACE
       }
   }
 }
 
-renderFinalLineWithColor :: Boolean -> Integer -> String -> String
-renderFinalLineWithColor = (colorize, h, r) => {
-  enred = condColor(colorize, Terminal.text.red)
+renderFinalLineWithConfig :: RenderConfig -> Integer -> String -> String
+renderFinalLineWithConfig = (config, h, r) => {
+  enred = condColor(config.colorize, Terminal.text.red)
   nonZero = pipe(
     trailingDigit,
     Fn.ifElse(
       isZero,
-      Fn.always(ENTITY_TICK_UP),
+      Fn.always(config.characterMap.TICK_UP),
       pipe(
         show,
         enred,
@@ -114,34 +95,27 @@ renderFinalLineWithColor = (colorize, h, r) => {
     ++ "\n"
     ++ pipe(
       List.range(0),
-      map(Fn.ifElse(isZero, Fn.always(ENTITY_CORNER_BL), nonZero)),
+      map(Fn.ifElse(isZero, Fn.always(config.characterMap.CORNER_BL), nonZero)),
       unwords,
     )(h)
-    ++ ENTITY_CORNER_BR
+    ++ config.characterMap.CORNER_BR
 }
 
-renderRoomsWithColor :: Boolean -> Integer -> Integer -> TileMap -> List String
-export renderRoomsWithColor = (colorize, w, h, tiles) => pipe(
-  walkTileMap(renderTileWithColor(colorize, w, h)),
-  map(addEndBoundaries),
+renderRoomsWithConfig :: RenderConfig -> Integer -> Integer -> TileMap -> List String
+export renderRoomsWithConfig = (config, w, h, tiles) => pipe(
+  walkTileMap(renderTileWithConfig(config, w, h)),
+  map(config.endBoundary(config.characterMap)),
   map(String.join("")),
 )(tiles)
 
-renderWithColor :: Boolean -> Dungeon -> String
-export renderWithColor = (colorize, raw) => where(raw) {
-  Dungeon(_, w, h, tiles, areas, config) =>
+renderWithConfig :: RenderConfig -> Dungeon -> String
+export renderWithConfig = (config, raw) => where(raw) {
+  Dungeon(_, w, h, tiles, areas, _) =>
     do {
-      withColor = colorize || config.colorize
       return pipe(
-        renderRoomsWithColor(withColor, w, h),
+        renderRoomsWithConfig(config, w, h),
         unlines,
-        renderFinalLineWithColor(withColor, h),
+        renderFinalLineWithConfig(config, h),
       )(tiles)
     }
 }
-
-// testing without colors is easy
-export renderBoundary = renderBoundaryWithColor(false)
-export renderFinalLine = renderFinalLineWithColor(false)
-export renderRooms = renderRoomsWithColor(false)
-export render = renderWithColor(false)
