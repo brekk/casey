@@ -1,15 +1,17 @@
 import type { Maybe } from "Maybe"
 
-import type { Character, Inventory, Stuff } from "@/Types"
-
 import { lt } from "Compare"
 import List from "List"
 import { Just, Nothing } from "Maybe"
 import Set from "Set"
 
 import Object from "@/Object"
-import { NPC, Player } from "@/Types"
 
+
+
+export type Character = Player(String, Inventory) | NPC(String, Inventory)
+
+export type Cell = Tile | Container(Stuff) | Environment(Character)
 
 
 make :: String -> Character
