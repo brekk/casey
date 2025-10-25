@@ -38,7 +38,7 @@ export alias RenderConfig = {
   characterMap :: CharacterMap,
   colorize :: Boolean,
   endBoundary :: CharacterMap -> List String -> List String,
-  renderEndLineCharacter :: CharacterMap -> (String -> String) -> Integer -> String,
+  endLineCharacter :: CharacterMap -> (String -> String) -> Integer -> String,
 }
 
 
@@ -86,7 +86,7 @@ renderFinalLineWithConfig = (config, h, r) => {
     ++ "\n"
     ++ pipe(
       List.range(0),
-      map(config.renderEndLineCharacter(config.characterMap, enred)),
+      map(config.endLineCharacter(config.characterMap, enred)),
       unwords,
     )(h)
     ++ config.characterMap.CORNER_BR

@@ -18,7 +18,8 @@ import Inv from "Invective"
 import Dungeon from "@/Dungeon"
 import { log } from "@/Log"
 import Maze from "@/Maze"
-import { render, renderRoomsWithColor } from "@/Render"
+import { renderRoomsWithConfig } from "@/Render"
+import { DEFAULT_RENDER_CONFIG, render } from "@/Render/Config"
 import Tile from "@/Tile"
 
 
@@ -45,7 +46,7 @@ pluck = (setX, u) => pipe(
 
 cardinalCarve = (s, tries) => {
   prev = s.vec
-  step = Inv.add(s.vec, Inv.Vector(integer(-5, 5, s.seed), integer(-5, 5, s.seed)))
+  step = Inv.add(s.vec, Inv.Vector(integer(-1, 1, s.seed), integer(-1, 1, s.seed)))
   inBounds = Inv.concrete((x, y) => x < s.boundaries.x && x >= 0 && y < s.boundaries.y && y >= 0)
   checkBounds = inBounds(step)
   inSet = Set.includes(step, s.paths)
@@ -56,11 +57,15 @@ cardinalCarve = (s, tries) => {
         fromMaybe(prev),
       )(s.seed)
     }
+
+    log.walk3("re-step!", step)
     return cardinalCarve(s, tries - 1)
-  } else if (!inSet && checkBounds) {
-    step
-  } else {
-    prev
+  } else if (!inSet && checkBounds) do {
+    log.walk2("step!", step)
+    return step
+  } else do {
+    log.walk("prev!", prev)
+    return prev
   }
 }
 
@@ -102,7 +107,6 @@ main = () => {
           },
           { prev: Nothing, stack: [] },
         ),
-        log.walk("PATHS!"),
         .stack,
       )(state.paths)
       return Tile.walkTileMap(
@@ -112,7 +116,7 @@ main = () => {
         state.tileMap,
       )
     },
-    renderRoomsWithColor(true, 30, 30),
+    renderRoomsWithConfig(DEFAULT_RENDER_CONFIG, 30, 30),
     log.base("outcome!"),
   )(Tile.TileVoid)
 }

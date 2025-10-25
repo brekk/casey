@@ -10,6 +10,8 @@ export TAGS = {
   statusInitMaze: tagWithScope("status", ["creation", "maze"]),
   iter: tag("iteration"),
   walk: tag("walk"),
+  walk2: tag("walk2"),
+  walk3: tag("walk3"),
 }
 
 export log = {
@@ -20,4 +22,6 @@ export log = {
   statusInitMaze: env(TAGS.statusInitMaze),
   iter: env(TAGS.iter),
   walk: env(TAGS.walk),
+  walk2: env(TAGS.walk2),
+  walk3: env(TAGS.walk3),
 }

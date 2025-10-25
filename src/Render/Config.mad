@@ -100,7 +100,7 @@ export DEFAULT_RENDER_CONFIG = {
   characterMap: DEFAULT_CHARMAP,
   boundary: defaultBoundary,
   endBoundary: defaultEndBoundary,
-  renderEndLineCharacter: defaultRenderEndLineCharacter,
+  endLineCharacter: defaultRenderEndLineCharacter,
 }
 
 export render = renderWithConfig(DEFAULT_RENDER_CONFIG)
