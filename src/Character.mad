@@ -1,0 +1,135 @@
+import type { Maybe } from "Maybe"
+
+import type { Character, Inventory, Stuff } from "@/Types"
+
+import { lt } from "Compare"
+import Fn from "Function"
+import IO from "IO"
+import List from "List"
+import { Just, Nothing, fromMaybe } from "Maybe"
+import Set from "Set"
+
+import Object from "@/Object"
+import { NPC, Player } from "@/Types"
+
+
+
+make :: String -> Character
+export make = Player($, Set.empty)
+
+
+///////// ACCESSORS
+
+name :: Character -> String
+export name = where {
+  Player(n, _) =>
+    n
+
+  NPC(n, _) =>
+    n
+}
+
+inventory :: Character -> Inventory
+export inventory = where {
+  Player(_, inv) =>
+    inv
+
+  NPC(_, inv) =>
+    inv
+}
+
+///////// TRANSFORMERS
+
+set :: Inventory -> Character -> Character
+export set = (i, c) => where(c) {
+  Player(n, _) =>
+    Player(n, i)
+
+  NPC(n, _) =>
+    NPC(n, i)
+}
+
+give :: Stuff -> Character -> Character
+export give = (stuff, person) => where(person) {
+  Player(n, inv) =>
+    Player(n, Set.insert(stuff, inv))
+
+  NPC(n, inv) =>
+    NPC(n, Set.insert(stuff, inv))
+}
+
+rummage :: (List Stuff -> List Stuff) -> Character -> Character
+export rummage = (fn, person) => {
+  dig = pipe(
+    Set.toList,
+    fn,
+    Set.fromList,
+  )
+
+  return where(person) {
+    Player(n, raw) =>
+      pipe(
+        dig,
+        Player(n),
+      )(raw)
+
+    NPC(n, raw) =>
+      pipe(
+        dig,
+        NPC(n),
+      )(raw)
+  }
+}
+
+
+
+has :: String -> Character -> Boolean
+export has = (lookup, person) => pipe(
+  inventory,
+  Set.filter(Object.hasName(lookup)),
+  Set.length,
+  lt(0),
+)(person)
+
+remove :: String -> Character -> Character
+export remove = (lookup, person) => pipe(
+  inventory,
+  Set.toList,
+  List.reject(Object.hasName(lookup)),
+  Set.fromList,
+  set($, person),
+)(person)
+
+grab :: String -> Character -> #[Maybe Stuff, Character]
+export grab = (lookup, person) => pipe(
+  inventory,
+  Set.filter(Object.hasName(lookup)),
+  Set.toList,
+  List.first,
+  where {
+    Just(item) =>
+      #[Just(item), remove(lookup, person)]
+
+    _ =>
+      #[Nothing, person]
+  },
+)(person)
+
+
+alias InventoryPair = #[List Stuff, List Stuff]
+alias CharacterPair = #[Character, Character]
+
+trade :: (InventoryPair -> InventoryPair) -> Character -> Character -> CharacterPair
+export trade = (fn, a, b) => {
+  inv = pipe(
+    inventory,
+    Set.toList,
+  )
+  return pipe(
+    fn,
+    where {
+      #[iA, iB] =>
+        #[set(Set.fromList(iA), a), set(Set.fromList(iB), b)]
+    },
+  )(#[inv(a), inv(b)])
+}

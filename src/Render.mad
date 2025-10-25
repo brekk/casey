@@ -1,0 +1,128 @@
+import type { Area } from "@/Area"
+import type { Dungeon } from "@/Dungeon"
+import type { Tile, TileMap } from "@/Tile"
+
+import Fn from "Function"
+import Integer from "Integer"
+import List from "List"
+import String from "String"
+import Terminal from "Terminal"
+
+import { Area, anyAreaContainsPoint, getBoundingBox, isBoundary } from "@/Area"
+import { Dungeon } from "@/Dungeon"
+import { trailingDigit } from "@/Math"
+import { Tile, TileFloor, TileWall, walkTileMap } from "@/Tile"
+import {
+  BLOCK,
+  ENTITY_BOUNDARY,
+  ENTITY_CORNER,
+  ENTITY_ROOM,
+  ENTITY_SPACE,
+  ENTITY_TICK_LEFT,
+  ENTITY_TICK_RIGHT,
+  TRIANGLE_DOWN,
+  TRIANGLE_UP,
+} from "@/constants"
+
+
+
+isZero = Fn.equals(0)
+
+renderBoundary :: String -> (String -> String) -> Integer -> String
+export renderBoundary = (tick, fn, i) => Fn.ifElse(
+  isZero,
+  Fn.always(fn(ENTITY_CORNER)),
+  pipe(
+    trailingDigit,
+    Fn.ifElse(
+      isZero,
+      Fn.always(fn(tick)),
+      pipe(
+        show,
+        fn,
+      ),
+    ),
+  ),
+  i,
+)
+
+renderTile :: Integer -> Integer -> Tile -> String
+export renderTile = (stageWidth, stageHeight, tile) => where(tile) {
+  Tile(tk, tx, ty) =>
+    if (tk == TileFloor) {
+      ENTITY_ROOM
+    } else if (
+      tk == TileWall && isBoundary(getBoundingBox(Area(0, 0, stageWidth, stageHeight)), tx, ty)
+    ) {
+      ty == 0
+        ? renderBoundary(ENTITY_TICK_RIGHT, Terminal.text.green, tx)
+        : renderBoundary(TRIANGLE_DOWN, Terminal.text.yellow, ty)
+    } else {
+      ENTITY_SPACE
+    }
+}
+
+unwords = String.join("")
+unlines = String.join("\n")
+
+renderFinalHorizontal :: Integer -> String -> String
+renderFinalHorizontal = (h, r) => r
+    ++ "\n"
+    ++ pipe(
+      List.range(0),
+      map(
+        Fn.ifElse(
+          isZero,
+          Fn.always(ENTITY_CORNER),
+          pipe(
+            trailingDigit,
+            Fn.ifElse(
+              isZero,
+              Fn.always(Terminal.text.red(TRIANGLE_UP)),
+              pipe(
+                show,
+                Terminal.text.red,
+              ),
+            ),
+          ),
+        ),
+      ),
+      unwords,
+    )(h)
+    ++ ENTITY_CORNER
+
+// this is a bit of a PITA comparison, but fine for now
+endBoundarySwap = (c) => (c == Terminal.text.green(ENTITY_TICK_RIGHT) ? ENTITY_TICK_LEFT : c)
+
+addEndBoundaries = where {
+  [] =>
+    []
+
+  [x] =>
+    [x]
+
+  [x, ...y] =>
+    pipe(
+      List.concat([x]),
+      List.append(endBoundarySwap(x)),
+    )(y)
+}
+
+renderRooms :: Integer -> Integer -> TileMap -> List String
+renderRooms = (w, h, tiles) => pipe(
+  walkTileMap(renderTile(w, h)),
+  map(addEndBoundaries),
+  map(unwords),
+)(tiles)
+
+render :: Dungeon -> String
+export render = pipe(
+  where {
+    Dungeon(_, w, h, tiles, areas) =>
+      pipe(
+        renderRooms(w, h),
+        unlines,
+        renderFinalHorizontal(h),
+      )(tiles)
+  },
+)

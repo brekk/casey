@@ -1,0 +1,10 @@
+import Set from "Set"
+
+import Character from "@/Character"
+import { NPC } from "@/Types"
+
+
+
+export AETHER = NPC("Aether", Set.empty)
+export modify = Character.rummage($, AETHER)
+export store = Character.trade($, AETHER)

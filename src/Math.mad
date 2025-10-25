@@ -1,0 +1,48 @@
+import {} from "Compare"
+import Float from "Float"
+import Integer from "Integer"
+import __Math from "Math"
+import {} from "Number"
+
+
+
+// leadingDigit :: Integer -> Integer
+export leadingDigit = (x) => {
+  y = x
+  while(y >= 10) do {
+    y := y / 10
+  }
+  return __Math.floor(y)
+}
+
+trailingDigit :: Integer -> Integer
+export trailingDigit = (x) => pipe(
+  __Math.mod($, 10),
+  Integer.toFloat,
+  __Math.floor,
+  Float.toInteger,
+)(x)
+
+minimum :: Integer -> Integer -> Integer
+export minimum = (m, x) => x < m ? m : x
+
+isEven :: Integer -> Boolean
+export isEven = (x) => __Math.mod(x, 2) == 0
+
+makeOdd :: Integer -> Integer
+export makeOdd = (x) => isEven(x) ? x + 1 : x
+
+abs :: (Comparable a, Number a) => a -> a
+export abs = (x) => x < 0 ? x * -1 : x
+
+PI :: Float
+PI = 3.14159265358979323846264338327950288419716939937510
+
+DEGREES :: Float
+DEGREES = 180 / PI
+
+rad2deg :: Float -> Float
+export rad2deg = (rad) => rad * DEGREES
+
+deg2rad :: Float -> Float
+export deg2rad = (deg) => deg / DEGREES

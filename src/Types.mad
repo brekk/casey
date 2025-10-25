@@ -1,0 +1,16 @@
+import type { Set } from "Set"
+
+import {} from "Compare"
+
+
+
+// Stuff(name, assets)
+export type Stuff = Mutable(String, String, List String) | Immutable(String, String, List String)
+derive Comparable Stuff
+
+
+export alias Inventory = Set Stuff
+
+export type Character = Player(String, Inventory) | NPC(String, Inventory)
+
+export type Cell = Tile | Container(Stuff) | Environment(Character)

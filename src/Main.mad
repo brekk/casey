@@ -1,0 +1,62 @@
+import type { Maybe } from "Maybe"
+
+import IO from "IO"
+import List from "List"
+import { Just, Nothing, fromMaybe } from "Maybe"
+import Tuple from "Tuple"
+
+import Aether from "@/Aether"
+import Character from "@/Character"
+import Math from "@/Math"
+import Object from "@/Object"
+import Vector from "@/Vector"
+
+
+
+firstItem = where {
+  #[global, character] =>
+    pipe(
+      List.first,
+      where {
+        Nothing =>
+          #[global, character]
+
+        Just(first) =>
+          #[List.append(Object.cast(first), global), List.tail(character)]
+      },
+    )(character)
+}
+
+main = () => {
+  God = Object.makeWithSeed("COOL")
+  x = Character.make("brekk")
+  pipe(
+    Character.give(God.make("potion")),
+    Character.give(God.make("pendant")),
+    Character.give(God.make("cloak")),
+    IO.pTrace("brekk has stuff"),
+    Character.rummage(
+      (raw) => pipe(
+        List.last,
+        where {
+          Just(final) =>
+            pipe(
+              Object.rename("magic cloak"),
+              God.copy,
+              List.append($, raw),
+            )(final)
+
+          _ =>
+            raw
+        },
+      )(raw),
+    ),
+    IO.pTrace("before storing things in the ether"),
+    Aether.store(firstItem),
+    IO.pTrace("things in the ether!"),
+    Tuple.snd,
+    IO.pTrace("FINAL FINAL"),
+    Character.grab("magic cloak"),
+    IO.pTrace("grabber"),
+  )(x)
+}

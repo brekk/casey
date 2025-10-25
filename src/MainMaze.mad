@@ -1,0 +1,24 @@
+import Date from "Date"
+import IO from "IO"
+import Math from "Math"
+import { fromMaybe } from "Maybe"
+import LCG from "Random/LCG"
+import String from "String"
+
+import Dungeon from "@/Dungeon"
+import { trailingDigit } from "@/Math"
+import Maze from "@/Maze"
+import { render } from "@/Render"
+
+
+
+main = () => {
+  IO.pTrace("DIGIES", trailingDigit(1234567))
+  pipe(
+    Date.getTimestamp,
+    LCG.mkSeed,
+    Dungeon.createDungeon($, 40, 80),
+    render,
+    IO.put,
+  )(Date.now())
+}

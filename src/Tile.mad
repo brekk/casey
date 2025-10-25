@@ -1,0 +1,132 @@
+import type { Maybe } from "Maybe"
+
+import List from "List"
+import { Just, Nothing, isJust } from "Maybe"
+
+
+
+export type TileType = TileWall | TileFloor | TileDoor | TileHazard | TileVoid
+
+// type x y
+export type Tile = Tile(TileType, Integer, Integer)
+
+export alias TileMap = List (List Tile)
+
+export alias Tish = Maybe Tile
+
+
+// Neighbors(_e, _n, _ne, _nw, _s, _se, _sw, _w)
+export type Neighbors = Neighbors(Tish, Tish, Tish, Tish, Tish, Tish, Tish, Tish)
+// Cardinal(_e, _n, _s, _w)
+export type Cardinal = Cardinal(Tish, Tish, Tish, Tish)
+
+neighborsToCardinal :: Neighbors -> Cardinal
+neighborsToCardinal = where {
+  Neighbors(_e, _n, _, _, _s, _, _, _w) =>
+    Cardinal(_e, _n, _s, _w)
+}
+
+cardinalToList :: Cardinal -> List Tish
+cardinalToList = where {
+  Cardinal(_e, _n, _s, _w) =>
+    [_e, _n, _s, _w]
+}
+
+walkTileMap :: (Tile -> a) -> TileMap -> List (List a)
+export walkTileMap = (fn, tiles) => List.reduce(
+  (agg, rows) => List.append(map(fn, rows), agg),
+  [],
+  tiles,
+)
+
+atIndex :: TileMap -> Integer -> Integer -> Tish
+export atIndex = (tileMap, x, y) => pipe(
+  List.nth(x),
+  where {
+    Just(xs) =>
+      List.nth(y, xs)
+
+    Nothing =>
+      Nothing
+  },
+)(tileMap)
+
+makeTileMap :: Integer -> Integer -> TileMap
+export makeTileMap = (width, height) => pipe(
+  List.range(0),
+  map(
+    (x) => pipe(
+      List.range(0),
+      map((y) => Tile(TileWall, x, y)),
+    )(height),
+  ),
+)(width)
+
+e :: Neighbors -> Tish
+export e = where {
+  Neighbors(_e, _, _, _, _, _, _, _) =>
+    _e
+}
+n :: Neighbors -> Tish
+export n = where {
+  Neighbors(_, _n, _, _, _, _, _, _) =>
+    _n
+}
+ne :: Neighbors -> Tish
+export ne = where {
+  Neighbors(_, _, _ne, _, _, _, _, _) =>
+    _ne
+}
+nw :: Neighbors -> Tish
+export nw = where {
+  Neighbors(_, _, _, _nw, _, _, _, _) =>
+    _nw
+}
+s :: Neighbors -> Tish
+export s = where {
+  Neighbors(_, _, _, _, _s, _, _, _) =>
+    _s
+}
+se :: Neighbors -> Tish
+export se = where {
+  Neighbors(_, _, _, _, _, _se, _, _) =>
+    _se
+}
+sw :: Neighbors -> Tish
+export sw = where {
+  Neighbors(_, _, _, _, _, _, _sw, _) =>
+    _sw
+}
+w :: Neighbors -> Tish
+export w = where {
+  Neighbors(_, _, _, _, _, _, _, _w) =>
+    _w
+}
+
+getNeighbors :: TileMap -> Integer -> Integer -> Neighbors
+export getNeighbors = (tiles, x, y) => {
+  at = atIndex(tiles)
+  return Neighbors(
+    at(x + 1, y),
+    at(x, y - 1),
+    at(x + 1, y - 1),
+    at(x - 1, y - 1),
+    at(x, y + 1),
+    at(x + 1, y + 1),
+    at(x - 1, y + 1),
+    at(x - 1, y),
+  )
+}
+
+getCardinalNeighbors :: TileMap -> Integer -> Integer -> Cardinal
+export getCardinalNeighbors = (tiles, x, y) => {
+  at = atIndex(tiles)
+  return Cardinal(at(x + 1, y), at(x, y - 1), at(x, y + 1), at(x - 1, y))
+}
+
+getPossibleCardinalPaths :: TileMap -> Integer -> Integer -> List Tish
+export getPossibleCardinalPaths = (tiles, x, y) => pipe(
+  getCardinalNeighbors(tiles, x),
+  cardinalToList,
+  List.filter(isJust),
+)(y)
