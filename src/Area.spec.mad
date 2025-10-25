@@ -1,0 +1,68 @@
+import { assertEquals, test } from "Test"
+
+import { Area, Box } from "./Area"
+import {
+  anyContainsPoint,
+  anyIntersects,
+  containsPoint,
+  getBoundingBox,
+  intersects,
+  isBoundary,
+  isEdge,
+} from "./Area"
+
+
+
+test(
+  "intersects - yes",
+  () => {
+    a = Area(1, 1, 10, 10)
+    return assertEquals(true, intersects(a, a))
+  },
+)
+test(
+  "intersects - no",
+  () => {
+    a = Area(1, 1, 10, 10)
+    b = Area(-100, 1, 2, 2)
+    return assertEquals(false, intersects(a, b))
+  },
+)
+
+test(
+  "getBoundingBox",
+  () => {
+    a = Area(-5, -5, 10, 10)
+    return assertEquals(getBoundingBox(a), Box(-5, 5, 5, -5))
+  },
+)
+
+test("containsPoint - yes", () => assertEquals(true, containsPoint(Area(0, 0, 10, 10), 1, 1)))
+
+test("containsPoint - no", () => assertEquals(false, containsPoint(Area(0, 0, 10, 10), 11, 11)))
+
+test(
+  "anyIntersects - yes",
+  () => assertEquals(true, anyIntersects([Area(0, 0, 5, 5)], Area(0, 0, 5, 5))),
+)
+
+test(
+  "anyIntersects - no",
+  () => assertEquals(false, anyIntersects([Area(0, 0, 5, 5)], Area(100, 100, 5, 5))),
+)
+
+test("anyContainsPoint - yes", () => assertEquals(true, anyContainsPoint([Area(0, 0, 5, 5)], 1, 1)))
+
+test(
+  "anyContainsPoint - no",
+  () => assertEquals(false, anyContainsPoint([Area(0, 0, 5, 5)], 100, 100)),
+)
+
+test("isEdge - yes", () => assertEquals(true, isEdge(0, 10, 10)))
+
+test("isEdge - no", () => assertEquals(false, isEdge(0, 10, 4)))
+
+test(
+  "isBoundary - yes",
+  () => assertEquals(true, isBoundary(getBoundingBox(Area(0, 0, 10, 10)), 0, 0)),
+)

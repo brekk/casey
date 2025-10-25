@@ -1,0 +1,34 @@
+import List from "List"
+import Stream from "Stream"
+import { Wish } from "Wish"
+
+
+
+export type Cycle status failure
+  = UserCycle(status)
+  | GameCycle(status)
+  | FailCycle(failure)
+  | EndCycle
+
+export cycle = (stream) => {
+  events = []
+  push = (x) => {
+    events := List.append(x, events)
+    return events
+  }
+  return Wish(
+    (bad, good) => {
+      fail = (e) => {
+        bad(push(FailCycle(e)))
+      }
+      iter = (x) => {
+        push(GameCycle(x))
+      }
+      quit = () => {
+        good(push(EndCycle))
+      }
+      Stream.subscribe(fail, iter, quit)(stream)
+      return () => {}
+    },
+  )
+}

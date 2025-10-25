@@ -1,4 +1,4 @@
-import type { Seed } from "Random/LCG"
+import type { Seed } from "Random"
 
 import type { TileMap } from "./Tile"
 

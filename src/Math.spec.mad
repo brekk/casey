@@ -1,0 +1,9 @@
+import { report } from "Study"
+
+import { isEven, makeOdd } from "@/Math"
+
+
+
+report(isEven, "isEven", [#[4, true], #[3, false], #[0, true], #[-3, false], #[3, false]])
+
+report(makeOdd, "makeOdd", [#[200, 201], #[201, 201]])

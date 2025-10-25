@@ -1,62 +1,118 @@
-import type { Maybe } from "Maybe"
+import type { Vector } from "Invective"
 
+import { EQ, GT, LT } from "Compare"
+import Date from "Date"
+import Float from "Float"
 import IO from "IO"
 import List from "List"
-import { Just, Nothing, fromMaybe } from "Maybe"
-import Tuple from "Tuple"
+import Math from "Math"
+import { Just, Nothing } from "Maybe"
+import { fromMaybe } from "Maybe"
+import { generate, integer, pick } from "Random"
+import Set from "Set"
+import String from "String"
 
-import Aether from "@/Aether"
-import Character from "@/Character"
-import Math from "@/Math"
-import Object from "@/Object"
-import Vector from "@/Vector"
+import { Vector } from "Invective"
+import Inv from "Invective"
+
+import Dungeon from "@/Dungeon"
+import { log } from "@/Log"
+import Maze from "@/Maze"
+import { render, renderRoomsWithColor } from "@/Render"
+import Tile from "@/Tile"
 
 
 
-firstItem = where {
-  #[global, character] =>
-    pipe(
-      List.first,
-      where {
-        Nothing =>
-          #[global, character]
+nowSeed = () => pipe(
+  Date.getTimestamp,
+  generate,
+)(Date.now())
 
-        Just(first) =>
-          #[List.append(Object.cast(first), global), List.tail(character)]
-      },
-    )(character)
+generateDungeon = () => {
+  pipe(
+    Date.getTimestamp,
+    generate,
+    Dungeon.createDungeon($, 30, 60),
+    render,
+    IO.put,
+  )(Date.now())
+}
+
+pluck = (setX, u) => pipe(
+  Set.toList,
+  pick($, u),
+)(setX)
+
+cardinalCarve = (s, tries) => {
+  prev = s.vec
+  step = Inv.add(s.vec, Inv.Vector(integer(-5, 5, s.seed), integer(-5, 5, s.seed)))
+  inBounds = Inv.concrete((x, y) => x < s.boundaries.x && x >= 0 && y < s.boundaries.y && y >= 0)
+  checkBounds = inBounds(step)
+  inSet = Set.includes(step, s.paths)
+  return if (tries - 1 >= 0 && (!checkBounds || inSet)) do {
+    if (inSet) do {
+      s.vec := pipe(
+        pluck(s.paths),
+        fromMaybe(prev),
+      )(s.seed)
+    }
+    return cardinalCarve(s, tries - 1)
+  } else if (!inSet && checkBounds) {
+    step
+  } else {
+    prev
+  }
 }
 
 main = () => {
-  God = Object.makeWithSeed("COOL")
-  x = Character.make("brekk")
   pipe(
-    Character.give(God.make("potion")),
-    Character.give(God.make("pendant")),
-    Character.give(God.make("cloak")),
-    IO.pTrace("brekk has stuff"),
-    Character.rummage(
-      (raw) => pipe(
-        List.last,
-        where {
-          Just(final) =>
-            pipe(
-              Object.rename("magic cloak"),
-              God.copy,
-              List.append($, raw),
-            )(final)
-
-          _ =>
-            raw
-        },
-      )(raw),
+    log.base("making map..."),
+    Tile.makeTileMap($, 30, 30),
+    (tileMap) => (
+      {
+        boundaries: { x: 30, y: 30 },
+        tileMap,
+        vec: Vector(15, 15),
+        seed: nowSeed(),
+        paths: Set.fromList([]),
+      }
     ),
-    IO.pTrace("before storing things in the ether"),
-    Aether.store(firstItem),
-    IO.pTrace("things in the ether!"),
-    Tuple.snd,
-    IO.pTrace("FINAL FINAL"),
-    Character.grab("magic cloak"),
-    IO.pTrace("grabber"),
-  )(x)
+    List.reduce(
+      (state, _) => where(state.vec) {
+        Vector(x2, y2) =>
+          do {
+            state.vec := cardinalCarve(state, 0)
+            state.paths := Set.insert(state.vec, state.paths)
+            return state
+          }
+      },
+      $,
+      List.range(0, 60),
+    ),
+    (state) => {
+      interpolatedPaths = pipe(
+        Set.toList,
+        List.reduce(
+          (agg, curr) => where(agg.prev) {
+            Nothing =>
+              ({ prev: Just(curr), stack: [] })
+
+            Just(prev) =>
+              ({ stack: List.concat(agg.stack, Inv.path(true, prev, curr)), prev: Just(curr) })
+          },
+          { prev: Nothing, stack: [] },
+        ),
+        log.walk("PATHS!"),
+        .stack,
+      )(state.paths)
+      return Tile.walkTileMap(
+        (x) => List.includes(Tile.toVector(x), interpolatedPaths)
+          ? Tile.ofType(x, Tile.TileFloor)
+          : x,
+        state.tileMap,
+      )
+    },
+    renderRoomsWithColor(true, 30, 30),
+    log.base("outcome!"),
+  )(Tile.TileVoid)
 }

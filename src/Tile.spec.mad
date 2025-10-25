@@ -1,0 +1,111 @@
+import type { Cardinal, Neighbors, Tile, TileMap } from "@/Tile"
+
+import { Just, Nothing } from "Maybe"
+import String from "String"
+
+import { caseN2, report } from "Study"
+
+import { renderRooms } from "@/Render"
+import {
+  Cardinal,
+  Neighbors,
+  Tile,
+  TileDoor,
+  TileFloor,
+  TileHazard,
+  TileVoid,
+  TileWall,
+  atIndex,
+  getCardinalNeighbors,
+  getNeighbors,
+  getPossibleCardinalPaths,
+  makeTileMap,
+  walkTileMap,
+} from "@/Tile"
+
+
+
+FIXTURE_TILE_MAP = makeTileMap(TileVoid, 6, 6)
+
+modifyTestMap = where {
+  Tile(_, x, y) =>
+    Tile(x == 0 || x == 6 || y == 0 || y == 6 ? TileWall : TileVoid, x, y)
+}
+
+report(
+  pipe(
+    walkTileMap(modifyTestMap),
+    renderRooms(6, 4),
+    String.join("\n"),
+  ),
+  "walkTileMap",
+  [
+    #[
+      FIXTURE_TILE_MAP,
+      `012345
+1#####
+2#####
+3#####
+4#####
+5#####`,
+    ],
+  ],
+)
+
+report(
+  caseN2(
+    (x, y) => pipe(
+      walkTileMap(modifyTestMap),
+      atIndex($, x, y),
+    )(FIXTURE_TILE_MAP),
+  ),
+  "atIndex",
+  [#[#[5, 5], Just(Tile(TileVoid, 5, 5))], #[#[-1, 2], Nothing]],
+)
+
+report(
+  caseN2(
+    (x, y) => pipe(
+      walkTileMap(modifyTestMap),
+      getNeighbors($, x, y),
+    )(FIXTURE_TILE_MAP),
+  ),
+  "getNeighbors",
+  [
+    #[
+      #[5, 5],
+      Neighbors(
+        Nothing,
+        Just(Tile(TileVoid, 5, 4)),
+        Nothing,
+        Just(Tile(TileVoid, 4, 4)),
+        Nothing,
+        Nothing,
+        Nothing,
+        Just(Tile(TileVoid, 4, 5)),
+      ),
+    ],
+  ],
+)
+
+report(
+  caseN2(
+    (x, y) => pipe(
+      walkTileMap(modifyTestMap),
+      getCardinalNeighbors($, x, y),
+    )(FIXTURE_TILE_MAP),
+  ),
+  "getCardinalNeighbors",
+  [#[#[5, 5], Cardinal(Nothing, Just(Tile(TileVoid, 5, 4)), Nothing, Just(Tile(TileVoid, 4, 5)))]],
+)
+
+report(
+  caseN2(
+    (x, y) => pipe(
+      walkTileMap(modifyTestMap),
+      getPossibleCardinalPaths($, x, y),
+    )(FIXTURE_TILE_MAP),
+  ),
+  "getPossibleCardinalPaths",
+  [#[#[5, 5], [Just(Tile(TileVoid, 5, 4)), Just(Tile(TileVoid, 4, 5))]]],
+)

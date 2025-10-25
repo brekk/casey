@@ -1,7 +1,11 @@
+import type { Comparison } from "Compare"
 import type { Maybe } from "Maybe"
 
+import { EQ, GT, LT } from "Compare"
 import List from "List"
 import { Just, Nothing, isJust } from "Maybe"
+
+import { Vector } from "Invective"
 
 
 
@@ -10,26 +14,50 @@ export type TileType = TileWall | TileFloor | TileDoor | TileHazard | TileVoid
 // type x y
 export type Tile = Tile(TileType, Integer, Integer)
 
-export alias TileMap = List (List Tile)
-
+instance Comparable Tile {
+  compare = compareTiles
+}
 export alias Tish = Maybe Tile
-
 
 // Neighbors(_e, _n, _ne, _nw, _s, _se, _sw, _w)
 export type Neighbors = Neighbors(Tish, Tish, Tish, Tish, Tish, Tish, Tish, Tish)
 // Cardinal(_e, _n, _s, _w)
 export type Cardinal = Cardinal(Tish, Tish, Tish, Tish)
 
-neighborsToCardinal :: Neighbors -> Cardinal
-neighborsToCardinal = where {
-  Neighbors(_e, _n, _, _, _s, _, _, _w) =>
-    Cardinal(_e, _n, _s, _w)
+export alias TileMap = List (List Tile)
+
+
+compareTiles :: Tile -> Tile -> Comparison
+export compareTiles = (a, b) => where(#[a, b]) {
+  #[Tile(_, x, y), Tile(_, x2, y2)] =>
+    if (x == x2 && y == y2) {
+      EQ
+    } else if ((x == x2 && y < y2) || (x < x2 && y == y2)) {
+      LT
+    } else {
+      GT
+    }
 }
 
-cardinalToList :: Cardinal -> List Tish
-cardinalToList = where {
-  Cardinal(_e, _n, _s, _w) =>
-    [_e, _n, _s, _w]
+export fromVector = (tileType) => where {
+  Vector(x, y) =>
+    Tile(tileType, x, y)
+}
+
+export toVector = where {
+  Tile(_, x, y) =>
+    Vector(x, y)
+}
+
+export samePosition = (a, b) => where(#[a, b]) {
+  #[Tile(_, x, y), Tile(_, x2, y2)] =>
+    x == x2 && y == y2
+}
+
+ofType :: Tile -> TileType -> Tile
+export ofType = (origin, tileType) => where(origin) {
+  Tile(_, x, y) =>
+    Tile(tileType, x, y)
 }
 
 walkTileMap :: (Tile -> a) -> TileMap -> List (List a)
@@ -39,28 +67,51 @@ export walkTileMap = (fn, tiles) => List.reduce(
   tiles,
 )
 
-atIndex :: TileMap -> Integer -> Integer -> Tish
+atIndex :: TileMap -> Integer -> Integer -> Maybe Tile
 export atIndex = (tileMap, x, y) => pipe(
   List.nth(x),
-  where {
-    Just(xs) =>
-      List.nth(y, xs)
+  chain(List.nth(y)),
+  // where {
+  //   Just(xs) =>
+  //     List.nth(y, xs)
+  //
+  //   Nothing =>
+  //     Nothing
+  // },
 
-    Nothing =>
-      Nothing
-  },
+
 )(tileMap)
 
-makeTileMap :: Integer -> Integer -> TileMap
-export makeTileMap = (width, height) => pipe(
+makeTileMap :: TileType -> Integer -> Integer -> TileMap
+export makeTileMap = (tt, width, height) => pipe(
   List.range(0),
   map(
     (x) => pipe(
       List.range(0),
-      map((y) => Tile(TileWall, x, y)),
+      map((y) => Tile(tt, x, y)),
     )(height),
   ),
 )(width)
+
+
+getPossibleCardinalPaths :: TileMap -> Integer -> Integer -> List Tish
+export getPossibleCardinalPaths = (tiles, x, y) => pipe(
+  getCardinalNeighbors(tiles, x),
+  cardinalToList,
+  List.filter(isJust),
+)(y)
+
+neighborsToCardinal :: Neighbors -> Cardinal
+export neighborsToCardinal = where {
+  Neighbors(_e, _n, _, _, _s, _, _, _w) =>
+    Cardinal(_e, _n, _s, _w)
+}
+
+cardinalToList :: Cardinal -> List Tish
+cardinalToList = where {
+  Cardinal(_e, _n, _s, _w) =>
+    [_e, _n, _s, _w]
+}
 
 e :: Neighbors -> Tish
 export e = where {
@@ -123,10 +174,3 @@ export getCardinalNeighbors = (tiles, x, y) => {
   at = atIndex(tiles)
   return Cardinal(at(x + 1, y), at(x, y - 1), at(x, y + 1), at(x - 1, y))
 }
-
-getPossibleCardinalPaths :: TileMap -> Integer -> Integer -> List Tish
-export getPossibleCardinalPaths = (tiles, x, y) => pipe(
-  getCardinalNeighbors(tiles, x),
-  cardinalToList,
-  List.filter(isJust),
-)(y)

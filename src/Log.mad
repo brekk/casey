@@ -1,0 +1,23 @@
+import { env, tag, tagWithScope } from "PartyBus"
+
+
+
+export TAGS = {
+  base: tag("base"),
+  status: tag("status"),
+  statusInit: tagWithScope("status", ["creation"]),
+  statusInitRooms: tagWithScope("status", ["creation", "rooms"]),
+  statusInitMaze: tagWithScope("status", ["creation", "maze"]),
+  iter: tag("iteration"),
+  walk: tag("walk"),
+}
+
+export log = {
+  base: env(TAGS.base),
+  status: env(TAGS.status),
+  statusInit: env(TAGS.statusInit),
+  statusInitRooms: env(TAGS.statusInitRooms),
+  statusInitMaze: env(TAGS.statusInitMaze),
+  iter: env(TAGS.iter),
+  walk: env(TAGS.walk),
+}

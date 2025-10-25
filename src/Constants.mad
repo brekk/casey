@@ -1,9 +1,6 @@
-import Terminal from "Terminal"
-
-
-
-export RED_HASH = Terminal.text.red("#")
+export HASH = "#"
 export SMALL_STAR = "⋆"
+export VERTICAL_LINE = "｜"
 export BLOCK = "█"
 export TRIANGLE_RIGHT = "▶"
 export TRIANGLE_LEFT = "◀"
@@ -12,9 +9,9 @@ export TRIANGLE_UP = "▲"
 export CIRCLE = "⏺"
 
 
-export ENTITY_BOUNDARY = RED_HASH
-export ENTITY_ROOM = Terminal.text.yellow(BLOCK)
-export ENTITY_SPACE = Terminal.text.blue(SMALL_STAR)
-export ENTITY_CORNER = Terminal.text.green(CIRCLE)
-export ENTITY_TICK_LEFT = Terminal.text.red(TRIANGLE_LEFT)
-export ENTITY_TICK_RIGHT = Terminal.text.red(TRIANGLE_RIGHT)
+export ENTITY_BOUNDARY = VERTICAL_LINE
+export ENTITY_ROOM = BLOCK
+export ENTITY_SPACE = SMALL_STAR
+export ENTITY_CORNER = CIRCLE
+export ENTITY_TICK_LEFT = TRIANGLE_LEFT
+export ENTITY_TICK_RIGHT = TRIANGLE_RIGHT
