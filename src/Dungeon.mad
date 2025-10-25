@@ -34,6 +34,19 @@ import {
 
 
 
+export alias Config = {
+  colorize :: Boolean,
+  edgeDistance :: Integer,
+  pad :: Integer,
+  rectangularity :: Random -> Integer -> Integer,
+  rooms :: Random -> Integer,
+  size :: Random -> Integer -> Integer,
+  stageLimit :: Integer,
+}
+
+// Dungeon(seed, width, height, tiles, areas, config)
+export type Dungeon = Dungeon(Random, Integer, Integer, TileMap, List Area, Config)
+
 NORTH :: Vector Integer
 export NORTH = Vector(0, 1)
 
@@ -45,8 +58,6 @@ export EAST = Vector(1, 0)
 
 WEST :: Vector Integer
 export WEST = Vector(-1, 0)
-
-export type Dungeon = Dungeon(Random, Integer, Integer, TileMap, List Area)
 
 boundByStageWithDefault :: Integer -> Integer -> Integer -> Integer
 export boundByStageWithDefault = (edge, minima, dimension) => Math.min(minima, dimension - edge)
@@ -69,30 +80,31 @@ export calcRoomSize = (size, rectangularity, maximum, edgeDistance, seed) => Flo
     + 1,
 )
 
-makeRandomRoom :: Integer -> Integer -> Integer -> Random -> Area
-export makeRandomRoom = (stageWidth, stageHeight, pad, seed) => {
-  size = R.integer(1, 3 + pad, seed) * 2 + 1
-  rect = R.integer(0, 1 + Float.toInteger(Math.floor(size / 2) + 1), seed) * 2
+makeRandomRoom :: Config -> Integer -> Integer -> Integer -> Random -> Area
+export makeRandomRoom = (config, stageWidth, stageHeight, pad, seed) => {
+  size = config.size(seed, pad)
+  rect = config.rectangularity(seed, size)
   isHotdog = R.boolean(seed)
-  width = calcRoomSize(size, isHotdog ? 0 : rect, stageWidth, 4, seed)
-  height = calcRoomSize(size, !isHotdog ? 0 : rect, stageHeight, 4, seed)
+  calc = calcRoomSize(size, $, $, config.edgeDistance, seed)
+  width = calc(isHotdog ? 0 : rect, stageWidth)
+  height = calc(!isHotdog ? 0 : rect, stageHeight)
   x = randomPoint(stageWidth, width, seed)
   y = randomPoint(stageHeight, height, seed)
   area = Area(x, y, width, height)
   return area
 }
 
-makeRooms :: Integer -> Integer -> Integer -> Integer -> Random -> List Area
-export makeRooms = (total, stageWidth, stageHeight, pad, seed) => pipe(
-  List.repeatWith(() => makeRandomRoom(stageWidth, stageHeight, pad, seed)),
+makeRooms :: Config -> Integer -> Integer -> Integer -> Integer -> Random -> List Area
+export makeRooms = (config, total, stageWidth, stageHeight, pad, seed) => pipe(
+  List.repeatWith(() => makeRandomRoom(config, stageWidth, stageHeight, pad, seed)),
   List.reduce((agg, x) => !anyIntersectsWithPadding(1, agg, x) ? [...agg, x] : agg, []),
 )(total)
 
-stageDimension :: Integer -> Integer
-export stageDimension = pipe(
-  Math.max($, 5),
+stageDimension :: Config -> Integer -> Integer
+export stageDimension = (conf, x) => pipe(
+  Math.max($, conf.stageLimit),
   makeOdd,
-)
+)(x)
 
 threeSteps :: Vector Integer -> Vector Integer -> Vector Integer
 export threeSteps = (dir, vec) => pipe(
@@ -108,7 +120,6 @@ export canCarveFromTilesInDirection = (tilemap, dir, vec) => pipe(
     Vector(x, y) =>
       pipe(
         atIndex(tilemap, x),
-        IO.trace("AT!"),
         where {
           Just(Tile(tk, tx, ty)) =>
             tk != TileWall
@@ -177,17 +188,47 @@ export mapSize = (tilemap) => pipe(
   )(tilemap),
 )(tilemap)
 
-createDungeon :: Random -> Integer -> Integer -> Dungeon
-export createDungeon = (seed, _width, _height) => {
-  width = stageDimension(_width)
-  height = stageDimension(_height)
-  _areas = makeRooms(R.integer(100, 5000, seed), width, height, 4, seed)
+
+createDungeonWithConfig :: Config -> Random -> Integer -> Integer -> Dungeon
+export createDungeonWithConfig = (config, seed, _width, _height) => {
+  width = stageDimension(config, _width)
+  height = stageDimension(config, _height)
+  _areas = makeRooms(config, config.rooms(seed), width, height, config.pad, seed)
   IO.trace("ROOMS", _areas)
   _tiles = makeTileMap(TileWall, width, height)
   // getTile = atIndex(_tiles)
   inRoom = anyContainsPoint(_areas)
-  tiles = pipe(
-    walkTileMap(where { Tile(_, tx, ty) => Tile(inRoom(tx, ty) ? TileFloor : TileWall, tx, ty) }),
-  )(_tiles)
-  return Dungeon(seed, width, height, tiles, _areas)
+  tiles = walkTileMap(
+    where {
+      Tile(_, tx, ty) =>
+        Tile(inRoom(tx, ty) ? TileFloor : TileWall, tx, ty)
+    },
+    _tiles,
+  )
+  return Dungeon(seed, width, height, tiles, _areas, config)
 }
+
+
+defaultSize :: Random -> Integer -> Integer
+defaultSize = (seed, pad) => R.integer(1, 3 + pad, seed) * 2 + 1
+
+defaultRectangularity :: Random -> Integer -> Integer
+defaultRectangularity = (seed, size) => R.integer(
+    0,
+    1 + Float.toInteger(Math.floor(size / 2) + 1),
+    seed,
+  )
+    * 2
+
+DEFAULT_CONFIG :: Config
+export DEFAULT_CONFIG = {
+  pad: 4,
+  edgeDistance: 4,
+  stageLimit: 5,
+  rectangularity: defaultRectangularity,
+  size: defaultSize,
+  rooms: R.integer(100, 5000),
+  colorize: true,
+}
+
+export createDungeon = createDungeonWithConfig(DEFAULT_CONFIG)

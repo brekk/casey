@@ -16,9 +16,13 @@ import { stripColor } from "@/String"
 import { Tile, TileFloor, TileWall, walkTileMap } from "@/Tile"
 import {
   ENTITY_BOUNDARY,
-  ENTITY_CORNER,
+  ENTITY_CORNER_BL,
+  ENTITY_CORNER_BR,
+  ENTITY_CORNER_TL,
+  ENTITY_CORNER_TR,
   ENTITY_ROOM,
   ENTITY_SPACE,
+  ENTITY_SPACE_BOLD,
   ENTITY_TICK_DOWN,
   ENTITY_TICK_LEFT,
   ENTITY_TICK_RIGHT,
@@ -30,7 +34,10 @@ import {
 isZero = Fn.equals(0)
 unwords = String.join("")
 unlines = String.join("\n")
-endBoundarySwap = (c) => (stripColor(c) == ENTITY_TICK_RIGHT ? ENTITY_TICK_LEFT : c)
+endBoundarySwap = (c) => {
+  d = stripColor(c)
+  return d == ENTITY_TICK_RIGHT ? ENTITY_TICK_LEFT : d == ENTITY_CORNER_TL ? ENTITY_CORNER_TR : c
+}
 
 addEndBoundaries = where {
   [] =>
@@ -53,7 +60,7 @@ export renderBoundaryWithColor = (colorize, tick, fn, i) => {
   fun = condColor(colorize, fn)
   return Fn.ifElse(
     isZero,
-    Fn.always(ENTITY_CORNER),
+    Fn.always(ENTITY_CORNER_TL),
     pipe(
       trailingDigit,
       Fn.ifElse(
@@ -84,7 +91,7 @@ export renderTileWithColor = (colorize, stageWidth, stageHeight, tile) => {
           ? bound(ENTITY_TICK_RIGHT, Terminal.text.green, tx)
           : bound(ENTITY_TICK_DOWN, Terminal.text.yellow, ty)
       } else {
-        ENTITY_SPACE
+        trailingDigit(ty) == 0 || trailingDigit(tx) == 0 ? ENTITY_SPACE_BOLD : ENTITY_SPACE
       }
   }
 }
@@ -107,10 +114,10 @@ renderFinalLineWithColor = (colorize, h, r) => {
     ++ "\n"
     ++ pipe(
       List.range(0),
-      map(Fn.ifElse(isZero, Fn.always(ENTITY_CORNER), nonZero)),
+      map(Fn.ifElse(isZero, Fn.always(ENTITY_CORNER_BL), nonZero)),
       unwords,
     )(h)
-    ++ ENTITY_CORNER
+    ++ ENTITY_CORNER_BR
 }
 
 renderRoomsWithColor :: Boolean -> Integer -> Integer -> TileMap -> List String
@@ -122,12 +129,15 @@ export renderRoomsWithColor = (colorize, w, h, tiles) => pipe(
 
 renderWithColor :: Boolean -> Dungeon -> String
 export renderWithColor = (colorize, raw) => where(raw) {
-  Dungeon(_, w, h, tiles, areas) =>
-    pipe(
-      renderRoomsWithColor(colorize, w, h),
-      unlines,
-      renderFinalLineWithColor(colorize, h),
-    )(tiles)
+  Dungeon(_, w, h, tiles, areas, config) =>
+    do {
+      withColor = colorize || config.colorize
+      return pipe(
+        renderRoomsWithColor(withColor, w, h),
+        unlines,
+        renderFinalLineWithColor(withColor, h),
+      )(tiles)
+    }
 }
 
 // testing without colors is easy

@@ -1,19 +1,40 @@
 export BLOCK = "█"
 export CIRCLE = "⏺"
+export CIRCLE_STAR = "⍟"
+export CIRCLE_X = "⊗"
 export HASH = "#"
 export SMALL_STAR = "⋆"
+export STAR = "★"
+export DIAMOND = "✦"
 export TRIANGLE_DOWN = "▼"
 export TRIANGLE_LEFT = "◀"
 export TRIANGLE_RIGHT = "▶"
 export TRIANGLE_UP = "▲"
+export LINE_WAVE_VERTICAL = "⦚"
 export VERTICAL_LINE = "｜"
+export STAR_EIGHT = "✸"
+// export CIRCLE_FILL = "◍"
 
+export HALF_RIGHT = "▐"
+export HALF_LEFT = "▌"
+export HALF_TOP = "▀"
+export HALF_BOTTOM = "▄"
+
+export DIAGONAL_BR = "◢"
+export DIAGONAL_BL = "◣"
+export DIAGONAL_TL = "◤"
+export DIAGONAL_TR = "◥"
+export SPACE = " "
 
 
 export ENTITY_BOUNDARY = VERTICAL_LINE
-export ENTITY_CORNER = CIRCLE
+export ENTITY_CORNER_TL = SPACE
+export ENTITY_CORNER_TR = SPACE
+export ENTITY_CORNER_BL = SPACE
+export ENTITY_CORNER_BR = SPACE
 export ENTITY_ROOM = BLOCK
 export ENTITY_SPACE = SMALL_STAR
+export ENTITY_SPACE_BOLD = SMALL_STAR
 export ENTITY_TICK_DOWN = TRIANGLE_DOWN
 export ENTITY_TICK_LEFT = TRIANGLE_LEFT
 export ENTITY_TICK_RIGHT = TRIANGLE_RIGHT
