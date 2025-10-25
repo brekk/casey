@@ -1,17 +1,20 @@
+export BLOCK = "█"
+export CIRCLE = "⏺"
 export HASH = "#"
 export SMALL_STAR = "⋆"
-export VERTICAL_LINE = "｜"
-export BLOCK = "█"
-export TRIANGLE_RIGHT = "▶"
-export TRIANGLE_LEFT = "◀"
 export TRIANGLE_DOWN = "▼"
+export TRIANGLE_LEFT = "◀"
+export TRIANGLE_RIGHT = "▶"
 export TRIANGLE_UP = "▲"
-export CIRCLE = "⏺"
+export VERTICAL_LINE = "｜"
+
 
 
 export ENTITY_BOUNDARY = VERTICAL_LINE
+export ENTITY_CORNER = CIRCLE
 export ENTITY_ROOM = BLOCK
 export ENTITY_SPACE = SMALL_STAR
-export ENTITY_CORNER = CIRCLE
+export ENTITY_TICK_DOWN = TRIANGLE_DOWN
 export ENTITY_TICK_LEFT = TRIANGLE_LEFT
 export ENTITY_TICK_RIGHT = TRIANGLE_RIGHT
+export ENTITY_TICK_UP = TRIANGLE_UP

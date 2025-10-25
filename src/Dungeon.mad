@@ -181,7 +181,7 @@ createDungeon :: Random -> Integer -> Integer -> Dungeon
 export createDungeon = (seed, _width, _height) => {
   width = stageDimension(_width)
   height = stageDimension(_height)
-  _areas = makeRooms(400, width, height, 3, seed)
+  _areas = makeRooms(R.integer(100, 5000, seed), width, height, 4, seed)
   IO.trace("ROOMS", _areas)
   _tiles = makeTileMap(TileWall, width, height)
   // getTile = atIndex(_tiles)

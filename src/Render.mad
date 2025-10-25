@@ -12,18 +12,17 @@ import Terminal from "Terminal"
 import { Area, anyContainsPoint, getBoundingBox, isBoundary } from "@/Area"
 import { Dungeon } from "@/Dungeon"
 import { trailingDigit } from "@/Math"
-import { hex } from "@/String"
+import { stripColor } from "@/String"
 import { Tile, TileFloor, TileWall, walkTileMap } from "@/Tile"
 import {
-  BLOCK,
   ENTITY_BOUNDARY,
   ENTITY_CORNER,
   ENTITY_ROOM,
   ENTITY_SPACE,
+  ENTITY_TICK_DOWN,
   ENTITY_TICK_LEFT,
   ENTITY_TICK_RIGHT,
-  TRIANGLE_DOWN,
-  TRIANGLE_UP,
+  ENTITY_TICK_UP,
 } from "@/constants"
 
 
@@ -31,7 +30,7 @@ import {
 isZero = Fn.equals(0)
 unwords = String.join("")
 unlines = String.join("\n")
-endBoundarySwap = (c) => (c == ENTITY_TICK_RIGHT ? ENTITY_TICK_LEFT : c)
+endBoundarySwap = (c) => (stripColor(c) == ENTITY_TICK_RIGHT ? ENTITY_TICK_LEFT : c)
 
 addEndBoundaries = where {
   [] =>
@@ -54,12 +53,12 @@ export renderBoundaryWithColor = (colorize, tick, fn, i) => {
   fun = condColor(colorize, fn)
   return Fn.ifElse(
     isZero,
-    Fn.always(fun(ENTITY_CORNER)),
+    Fn.always(ENTITY_CORNER),
     pipe(
       trailingDigit,
       Fn.ifElse(
         isZero,
-        Fn.always(fun(tick)),
+        Fn.always(tick),
         pipe(
           show,
           fun,
@@ -83,7 +82,7 @@ export renderTileWithColor = (colorize, stageWidth, stageHeight, tile) => {
       ) {
         ty == 0
           ? bound(ENTITY_TICK_RIGHT, Terminal.text.green, tx)
-          : bound(TRIANGLE_DOWN, Terminal.text.yellow, ty)
+          : bound(ENTITY_TICK_DOWN, Terminal.text.yellow, ty)
       } else {
         ENTITY_SPACE
       }
@@ -93,30 +92,25 @@ export renderTileWithColor = (colorize, stageWidth, stageHeight, tile) => {
 renderFinalLineWithColor :: Boolean -> Integer -> String -> String
 renderFinalLineWithColor = (colorize, h, r) => {
   enred = condColor(colorize, Terminal.text.red)
+  nonZero = pipe(
+    trailingDigit,
+    Fn.ifElse(
+      isZero,
+      Fn.always(ENTITY_TICK_UP),
+      pipe(
+        show,
+        enred,
+      ),
+    ),
+  )
   return r
     ++ "\n"
     ++ pipe(
       List.range(0),
-      map(
-        Fn.ifElse(
-          isZero,
-          Fn.always(ENTITY_CORNER),
-          pipe(
-            trailingDigit,
-            Fn.ifElse(
-              isZero,
-              Fn.always(enred(TRIANGLE_UP)),
-              pipe(
-                show,
-                enred,
-              ),
-            ),
-          ),
-        ),
-      ),
+      map(Fn.ifElse(isZero, Fn.always(ENTITY_CORNER), nonZero)),
       unwords,
     )(h)
-    ++ enred(ENTITY_CORNER)
+    ++ ENTITY_CORNER
 }
 
 renderRoomsWithColor :: Boolean -> Integer -> Integer -> TileMap -> List String

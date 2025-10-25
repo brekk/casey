@@ -46,3 +46,9 @@ export alpha = (idx) => pipe(
       "?"
   },
 )(ALPHABET)
+
+stripColor :: String -> String
+export stripColor = String.replace(
+  "[\u001b\u009b][[()#;?]*(?:[0-9]{1,4}(?:;[0-9]{0,4})*)?[0-9A-ORZcf-nqry=><]",
+  "",
+)
