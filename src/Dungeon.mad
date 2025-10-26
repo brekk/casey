@@ -5,8 +5,8 @@ import type { Vector } from "Invective"
 import type { Area } from "@/Area"
 import type { TileMap } from "@/Tile"
 
-import Compare from "Compare"
-import Ctrl from "Control"
+// import Compare from "Compare"
+// import Ctrl from "Control"
 import Float from "Float"
 import Fn from "Function"
 import IO from "IO"
@@ -20,14 +20,14 @@ import R from "Random"
 
 import { Vector, add } from "Invective"
 
-import { Area, anyContainsPoint, anyIntersects, anyIntersectsWithPadding } from "@/Area"
+import { Area, anyContainsPoint, anyIntersectsWithPadding } from "@/Area"
 import { makeOdd } from "@/Math"
 import {
   Tile,
   TileFloor,
   TileWall,
   atIndex,
-  getPossibleCardinalPaths,
+  // getPossibleCardinalPaths,
   makeTileMap,
   walkTileMap,
 } from "@/Tile"
@@ -150,14 +150,14 @@ export cardinalPossibilities = (tilemap, vec) => pipe(
   map(where { #[dir, can] => dir }),
   IO.trace("pasta billy tees"),
 )(vec)
-
+/*
 growMazeAtPoint = (roomCheck, tilemap, x, y) => {
   isFloor = roomCheck(x, y)
   prevVector = Vector(x, y)
   cells = [prevVector]
 
   iterations = List.reduce(
-    (state, step) => {
+    (state, _) => {
       cards = pipe(
         canCarveCardinally(tilemap),
       )(state.prevVector)
@@ -175,6 +175,7 @@ growMazeAtPoint = (roomCheck, tilemap, x, y) => {
     tilemap
   }
 }
+*/
 
 mapSize :: TileMap -> Integer
 export mapSize = (tilemap) => pipe(

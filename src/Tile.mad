@@ -3,7 +3,7 @@ import type { Maybe } from "Maybe"
 
 import { EQ, GT, LT } from "Compare"
 import List from "List"
-import { Just, Nothing, isJust } from "Maybe"
+import { isJust } from "Maybe"
 
 import { Vector } from "Invective"
 
@@ -71,15 +71,6 @@ atIndex :: TileMap -> Integer -> Integer -> Maybe Tile
 export atIndex = (tileMap, x, y) => pipe(
   List.nth(x),
   chain(List.nth(y)),
-  // where {
-  //   Just(xs) =>
-  //     List.nth(y, xs)
-  //
-  //   Nothing =>
-  //     Nothing
-  // },
-
-
 )(tileMap)
 
 makeTileMap :: TileType -> Integer -> Integer -> TileMap
@@ -88,7 +79,7 @@ export makeTileMap = (tt, width, height) => pipe(
   map(
     (x) => pipe(
       List.range(0),
-      map((y) => Tile(tt, x, y)),
+      map(Tile(tt, x)),
     )(height),
   ),
 )(width)

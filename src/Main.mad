@@ -10,16 +10,23 @@ import { Just, Nothing } from "Maybe"
 import { fromMaybe } from "Maybe"
 import { generate, integer, pick } from "Random"
 import Set from "Set"
-import String from "String"
 
-import { Vector } from "Invective"
+// import String from "String"
+
+import {
+  Vector,
+} from "Invective"
 import Inv from "Invective"
 
-import Dungeon from "@/Dungeon"
-import { log } from "@/Log"
-import Maze from "@/Maze"
-import { renderRoomsWithConfig } from "@/Render"
-import { DEFAULT_RENDER_CONFIG, render } from "@/Render/Config"
+// import Dungeon from "@/Dungeon"
+import {
+  log,
+} from "@/Log"
+// import Maze from "@/Maze"
+import {
+  renderRoomsWithConfig,
+} from "@/Render"
+import { DEFAULT_RENDER_CONFIG } from "@/Render/Config"
 import Tile from "@/Tile"
 
 
@@ -28,16 +35,15 @@ nowSeed = () => pipe(
   Date.getTimestamp,
   generate,
 )(Date.now())
-
-generateDungeon = () => {
-  pipe(
-    Date.getTimestamp,
-    generate,
-    Dungeon.createDungeon($, 30, 60),
-    render,
-    IO.put,
-  )(Date.now())
-}
+// generateDungeon = () => {
+//   pipe(
+//     Date.getTimestamp,
+//     generate,
+//     Dungeon.createDungeon($, 30, 60),
+//     render,
+//     IO.put,
+//   )(Date.now())
+// }
 
 pluck = (setX, u) => pipe(
   Set.toList,
@@ -103,7 +109,15 @@ main = () => {
               ({ prev: Just(curr), stack: [] })
 
             Just(prev) =>
-              ({ stack: List.concat(agg.stack, Inv.path(true, prev, curr)), prev: Just(curr) })
+              (
+                {
+                  prev: Just(curr),
+                  stack: pipe(
+                    Inv.path(true, prev),
+                    List.concat(agg.stack),
+                  )(curr),
+                }
+              )
           },
           { prev: Nothing, stack: [] },
         ),

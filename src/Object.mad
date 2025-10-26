@@ -1,77 +1,89 @@
 import type { Random } from "Random"
-import type { Set } from "Set"
+
+// import type { Set } from "Set"
 
 import Fn from "Function"
 import List from "List"
-import { Just, Nothing, isJust } from "Maybe"
+import { Just } from "Maybe"
 import Random from "Random"
 import String from "String"
 
 
 
-export type Stuff = Mutable(String, String, List String) | Immutable(String, String, List String)
+// Stuff(id, name, assets, ownerId)
+export type Stuff
+  = Mutable(String, String, List String, String)
+  | Immutable(String, String, List String, String)
 derive Comparable Stuff
 
 
-export alias Inventory = Set Stuff
 
 ////// ACCESSORS
 
 id :: Stuff -> String
 export id = where {
-  Mutable(x, _, _) =>
+  Mutable(x, _, _, _) =>
     x
 
-  Immutable(x, _, _) =>
+  Immutable(x, _, _, _) =>
     x
 }
 
 name :: Stuff -> String
 export name = where {
-  Mutable(_, x, _) =>
+  Mutable(_, x, _, _) =>
     x
 
-  Immutable(_, x, _) =>
+  Immutable(_, x, _, _) =>
     x
 }
 
 assets :: Stuff -> List String
 export assets = where {
-  Mutable(_, _, x) =>
+  Mutable(_, _, x, _) =>
     x
 
-  Immutable(_, _, x) =>
+  Immutable(_, _, x, _) =>
+    x
+}
+
+owner :: Stuff -> String
+export owner = where {
+  Mutable(_, _, _, x) =>
+    x
+
+  Immutable(_, _, _, x) =>
     x
 }
 
 ///////// CONSTRUCTORS
 
-create :: String -> String -> Stuff
-export create = Mutable($, $, [])
+create :: String -> String -> String -> Stuff
+export create = Mutable($, $, [], $)
 
-createImmutable :: String -> String -> Stuff
-export createImmutable = Immutable($, $, [])
+createImmutable :: String -> String -> String -> Stuff
+export createImmutable = Immutable($, $, [], $)
 
 //////// TRANSFORMERS
 
 // copy stuff with a new id
 clone :: String -> Stuff -> Stuff
 export clone = (i, s) => where(s) {
-  Mutable(_, n, a) =>
-    Mutable(i, n, a)
+  Mutable(_, n, a, o) =>
+    Mutable(i, n, a, o)
 
-  Immutable(_, n, a) =>
-    Immutable(i, n, a)
+  Immutable(_, n, a, o) =>
+    Immutable(i, n, a, o)
 }
 
 // copy stuff with a new name
 rename :: String -> Stuff -> Stuff
 export rename = (x, s) => where(s) {
-  Mutable(i, _, a) =>
-    Mutable(i, x, a)
+  Mutable(i, _, a, o) =>
+    Mutable(i, x, a, o)
 
-  Immutable(i, _, a) =>
-    Immutable(i, x, a)
+  Immutable(i, _, a, o) =>
+    Immutable(i, x, a, o)
 }
 
 hasName :: String -> Stuff -> Boolean
@@ -82,8 +94,8 @@ export hasName = (n, s) => pipe(
 
 cast :: Stuff -> Stuff
 export cast = (x) => where(x) {
-  Mutable(i, n, a) =>
-    Immutable(i, n, a)
+  Mutable(i, n, a, o) =>
+    Immutable(i, n, a, o)
 
   _ =>
     x
@@ -91,8 +103,8 @@ export cast = (x) => where(x) {
 
 permute :: Stuff -> Stuff
 export permute = (x) => where(x) {
-  Immutable(i, n, a) =>
-    Mutable(i, n, a)
+  Immutable(i, n, a, o) =>
+    Mutable(i, n, a, o)
 
   _ =>
     x
@@ -126,14 +138,16 @@ alias Creator = { copy :: Stuff -> Stuff, hew :: String -> Stuff, make :: String
 makeWithSeed :: String -> Creator
 export makeWithSeed = (seed) => {
   r = Random.generateFromString(seed)
+  // TODO
+  GOD = "GOD"
   return {
     make: (n) => pipe(
       uuid,
-      create($, n),
+      create($, n, GOD),
     )(r),
     hew: (n) => pipe(
       uuid,
-      createImmutable($, n),
+      createImmutable($, n, GOD),
     )(r),
     copy: (input) => pipe(
       uuid,
